@@ -270,6 +270,17 @@
   .sheet-handle{ width:38px; height:5px; border-radius:100px; background:rgba(255,255,255,0.22); margin:0 auto 18px; }
   .sheet h2{ font-size:21px; font-weight:700; letter-spacing:-0.01em; line-height:1.2; }
   .sheet .s-tag{ font-size:12px; font-weight:600; color:var(--accent-1); text-transform:uppercase; letter-spacing:0.02em; margin-bottom:6px; }
+  .demo-btn{
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    margin:16px 0 6px; padding:15px; border-radius:16px;
+    background:linear-gradient(135deg,var(--accent-1),var(--accent-2));
+    color:#fff; font-size:15.5px; font-weight:700; letter-spacing:-0.01em;
+    text-decoration:none; border:none; cursor:pointer;
+    box-shadow:0 8px 22px -8px rgba(255,90,50,0.5);
+    transition:transform .12s;
+  }
+  .demo-btn:active{ transform:scale(0.97); }
+  .demo-btn svg{ width:20px; height:20px; }
   .detail-block{ margin-top:20px; }
   .detail-block .dl{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--text-3); margin-bottom:6px; display:flex; align-items:center; gap:7px; }
   .detail-block .dl svg{ width:15px; height:15px; color:var(--accent-1); }
@@ -425,6 +436,7 @@ const iconChevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 const iconClock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 const iconUp = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
 const iconInfo = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
+const iconPlay = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5v14l11-7z"/></svg>';
 
 /* ---------- Exercise animations (hand-made SVG flipbooks) ---------- */
 const ANIMS = {
@@ -725,14 +737,12 @@ function refreshCounts(){
 const backdrop=document.getElementById('backdrop'), sheet=document.getElementById('sheet'), sheetContent=document.getElementById('sheetContent');
 function openSheet(d, ex){
   const timed = ex.noRest;
-  const media =
-    (ex.anim && VIDS[ex.anim]) ? '<div class="exanim vid"><video src="'+VIDS[ex.anim]+'" autoplay loop muted playsinline preload="auto"></video></div>'
-    : (ex.anim && ANIMS[ex.anim]) ? '<div class="exanim">'+ANIMS[ex.anim]+'</div>'
-    : '';
+  const q = encodeURIComponent(ex.n.split('/')[0].split('(')[0].trim()+' ejercicio técnica');
+  const demoUrl = 'https://www.youtube.com/results?search_query='+q;
   sheetContent.innerHTML =
-    media+
     '<div class="s-tag">'+(ex.warmTag||d.tag)+'</div>'+
     '<h2>'+ex.n+'</h2>'+
+    '<a class="demo-btn" href="'+demoUrl+'" target="_blank" rel="noopener">'+iconPlay+'Ver cómo se hace</a>'+
     '<div class="detail-block"><div class="dl">'+(timed?'Duración':'Series')+'</div><div class="dv">'+ex.s+'</div></div>'+
     (timed ? '' : '<div class="detail-block"><div class="dl">'+iconClock+'Descanso</div><div class="dv mute">'+d.rest+'</div></div>')+
     (ex.prog ? '<div class="detail-block"><div class="dl">'+(timed?iconInfo+'Indicaciones':iconUp+'Cómo progresar')+'</div><div class="dv mute">'+ex.prog+'</div></div>' : '');
