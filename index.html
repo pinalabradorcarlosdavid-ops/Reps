@@ -234,6 +234,8 @@
     border:1px solid var(--hairline);
   }
   .exanim svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .exanim.vid{ height:196px; background:#0f1524; }
+  .exanim video{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
   .exanim .fig{ fill:none; stroke:#6aa8ff; stroke-width:4.5; stroke-linecap:round; stroke-linejoin:round; }
   .exanim .head{ fill:#6aa8ff; stroke:none; }
   .exanim .ground{ stroke:rgba(255,255,255,0.18); stroke-width:3; stroke-linecap:round; }
@@ -459,6 +461,11 @@ const ANIMS = {
       '</g>'+
     '</svg>'+
     '<div class="cap">Pistol squat</div>',
+};
+
+/* Rendered video animations (Remotion) — take precedence over SVG flipbooks */
+const VIDS = {
+  pistol: 'anim/pistol.mp4',
 };
 
 /* ---------- State + weekly persistence ---------- */
@@ -718,8 +725,12 @@ function refreshCounts(){
 const backdrop=document.getElementById('backdrop'), sheet=document.getElementById('sheet'), sheetContent=document.getElementById('sheetContent');
 function openSheet(d, ex){
   const timed = ex.noRest;
+  const media =
+    (ex.anim && VIDS[ex.anim]) ? '<div class="exanim vid"><video src="'+VIDS[ex.anim]+'" autoplay loop muted playsinline preload="auto"></video></div>'
+    : (ex.anim && ANIMS[ex.anim]) ? '<div class="exanim">'+ANIMS[ex.anim]+'</div>'
+    : '';
   sheetContent.innerHTML =
-    (ex.anim && ANIMS[ex.anim] ? '<div class="exanim">'+ANIMS[ex.anim]+'</div>' : '')+
+    media+
     '<div class="s-tag">'+(ex.warmTag||d.tag)+'</div>'+
     '<h2>'+ex.n+'</h2>'+
     '<div class="detail-block"><div class="dl">'+(timed?'Duración':'Series')+'</div><div class="dv">'+ex.s+'</div></div>'+
