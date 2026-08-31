@@ -285,17 +285,23 @@
   /* ---------- Day-complete celebration ---------- */
   #fx{ position:fixed; inset:0; pointer-events:none; z-index:60; }
   #fxtoast{
-    position:fixed; left:50%; top:32%; z-index:61;
-    display:flex; align-items:center; gap:10px; padding:12px 20px 12px 12px; border-radius:100px;
-    background:rgba(22,19,26,0.72); backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
-    border:1px solid var(--border); color:#fff; font-size:15.5px; font-weight:700; letter-spacing:-0.01em;
-    box-shadow:0 20px 50px -20px rgba(0,0,0,0.7);
-    opacity:0; transform:translate(-50%,-10px) scale(0.92); pointer-events:none;
-    transition:opacity .4s ease, transform .55s cubic-bezier(.22,1,.36,1);
+    position:fixed; left:50%; top:38%; z-index:61;
+    display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center;
+    opacity:0; transform:translate(-50%,38px); pointer-events:none;
+    transition:opacity .5s ease, transform .65s cubic-bezier(.22,1,.36,1);
   }
-  #fxtoast.show{ opacity:1; transform:translate(-50%,0) scale(1); }
-  #fxtoast .ic{ width:26px; height:26px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--accent-1),var(--accent-2)); }
-  #fxtoast .ic svg{ width:15px; height:15px; }
+  #fxtoast.show{ opacity:1; transform:translate(-50%,-12px); }   /* fade up */
+  #fxtoast .ic{
+    width:66px; height:66px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,var(--accent-1),var(--accent-2));
+    box-shadow:0 14px 34px -12px rgba(0,0,0,0.6);
+  }
+  #fxtoast .ic svg{ width:34px; height:34px; }
+  #fxtoast .txt{
+    font-size:31px; font-weight:800; letter-spacing:-0.02em; line-height:1; white-space:nowrap;
+    background:linear-gradient(135deg,#ffe0a3,var(--accent-1) 55%,var(--accent-2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
   .detail-block{ margin-top:20px; }
   .detail-block .dl{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--text-3); margin-bottom:6px; display:flex; align-items:center; gap:7px; }
   .detail-block .dl svg{ width:15px; height:15px; color:var(--accent-1); }
@@ -799,8 +805,8 @@ document.querySelectorAll('.tab').forEach(t=>{
 function renderAll(){ renderHoy(); updateHeader(); }
 
 /* ---------- Day-complete celebration ---------- */
-let fxCanvas=null, fxCtx=null, fxParticles=[], fxRunning=false;
-const FX_COLORS=['#ff9f45','#ff3b30','#ffd479','#ffffff','#ff7a4c'];
+let fxCanvas=null, fxCtx=null, fxParticles=[], fxRunning=false, fxFlash=0;
+const FX_SPARK=['#fff2cf','#ffe08a','#ffd06a','#ffb44a','#ff9430','#ff7a1f'];
 function fxResize(){
   const dpr=Math.min(window.devicePixelRatio||1,2);
   fxCanvas.width=innerWidth*dpr; fxCanvas.height=innerHeight*dpr;
@@ -816,43 +822,59 @@ function fxInit(){
 function fxToast(){
   let t=document.getElementById('fxtoast');
   if(!t){ t=document.createElement('div'); t.id='fxtoast';
-    t.innerHTML='<div class="ic">'+iconCheck+'</div><span>¡Día completo!</span>';
+    t.innerHTML='<div class="ic">'+iconCheck+'</div><div class="txt">¡Día completo!</div>';
     document.body.appendChild(t);
   }
   t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
-  clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),2200);
+  clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),2600);
 }
+const FX_CX=()=>innerWidth/2, FX_CY=()=>innerHeight*0.40;
 function celebrate(){
   fxToast();
   if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if(!fxCanvas) fxInit();
-  const cx=innerWidth/2, cy=innerHeight*0.40, N=120;
+  const cx=FX_CX(), cy=FX_CY(), N=300;
+  fxFlash=1;
   for(let i=0;i<N;i++){
-    const ang=Math.random()*Math.PI*2, spd=2+Math.random()*7.5, big=Math.random()<0.16;
+    const ang=Math.random()*Math.PI*2;
+    const spd=3+Math.pow(Math.random(),0.6)*15;   // radial, skewed (many mid, some very fast)
     fxParticles.push({
-      x:cx, y:cy,
-      vx:Math.cos(ang)*spd*(big?0.55:1),
-      vy:Math.sin(ang)*spd*(big?0.55:1)-2.2,
-      r:big?4+Math.random()*5:1.5+Math.random()*2.6,
-      c:FX_COLORS[(Math.random()*FX_COLORS.length)|0],
-      life:1, decay:0.008+Math.random()*0.012, glow:big
+      x:cx, y:cy, vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd,
+      r:0.8+Math.random()*1.7,
+      c:FX_SPARK[(Math.random()*FX_SPARK.length)|0],
+      life:1, decay:0.009+Math.random()*0.012
     });
   }
   if(!fxRunning){ fxRunning=true; requestAnimationFrame(fxLoop); }
 }
 function fxLoop(){
   fxCtx.clearRect(0,0,innerWidth,innerHeight);
+  fxCtx.globalCompositeOperation='lighter';   // additive = warm glow where sparks overlap
+  // central flash
+  if(fxFlash>0){
+    const cx=FX_CX(), cy=FX_CY(), R=170;
+    const g=fxCtx.createRadialGradient(cx,cy,0,cx,cy,R);
+    g.addColorStop(0,'rgba(255,228,170,'+(0.55*fxFlash)+')');
+    g.addColorStop(0.4,'rgba(255,150,60,'+(0.22*fxFlash)+')');
+    g.addColorStop(1,'rgba(255,120,40,0)');
+    fxCtx.globalAlpha=1; fxCtx.fillStyle=g;
+    fxCtx.beginPath(); fxCtx.arc(cx,cy,R,0,7); fxCtx.fill();
+    fxFlash-=0.07;
+  }
+  fxCtx.lineCap='round';
   for(let i=fxParticles.length-1;i>=0;i--){
     const p=fxParticles[i];
-    p.vy+=0.12; p.vx*=0.99; p.vy*=0.99; p.x+=p.vx; p.y+=p.vy; p.life-=p.decay;
+    p.vy+=0.10; p.vx*=0.985; p.vy*=0.985; p.x+=p.vx; p.y+=p.vy; p.life-=p.decay;
     if(p.life<=0){ fxParticles.splice(i,1); continue; }
+    const sp=Math.hypot(p.vx,p.vy)||0.001;
+    const k=Math.min(sp*2.4, 32);                // trail length ∝ speed → streaks
     fxCtx.globalAlpha=Math.max(0,p.life);
-    fxCtx.shadowBlur=p.glow?14:0; fxCtx.shadowColor=p.c;
-    fxCtx.fillStyle=p.c;
-    fxCtx.beginPath(); fxCtx.arc(p.x,p.y,p.r*(0.55+p.life*0.45),0,7); fxCtx.fill();
+    fxCtx.strokeStyle=p.c; fxCtx.lineWidth=p.r;
+    fxCtx.beginPath(); fxCtx.moveTo(p.x,p.y);
+    fxCtx.lineTo(p.x-p.vx/sp*k, p.y-p.vy/sp*k); fxCtx.stroke();
   }
-  fxCtx.globalAlpha=1; fxCtx.shadowBlur=0;
-  if(fxParticles.length) requestAnimationFrame(fxLoop); else fxRunning=false;
+  fxCtx.globalAlpha=1; fxCtx.globalCompositeOperation='source-over';
+  if(fxParticles.length || fxFlash>0) requestAnimationFrame(fxLoop); else fxRunning=false;
 }
 window.celebrate=celebrate;
 
