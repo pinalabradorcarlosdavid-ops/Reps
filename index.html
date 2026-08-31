@@ -145,6 +145,9 @@
   .core-head{ padding:12px 14px 2px; display:flex; align-items:center; gap:8px; }
   .core-head .dot{ width:6px; height:6px; border-radius:50%; background:linear-gradient(135deg,var(--accent-1),var(--accent-2)); }
   .core-head span{ font-size:11.5px; font-weight:700; letter-spacing:0.02em; color:var(--accent-1); text-transform:uppercase; }
+  .core.warm{ background:rgba(90,160,255,0.07); border-color:rgba(90,160,255,0.20); margin-bottom:2px; }
+  .core.warm .core-head span{ color:#5aa0ff; }
+  .core.warm .core-head .dot{ background:linear-gradient(135deg,#5aa0ff,#3b6bff); }
 
   /* ---------- Rest day ---------- */
   .rest-card{ padding:30px 22px; text-align:center; }
@@ -421,8 +424,14 @@ try{
 }catch(e){}
 DAYS.forEach(d=>{ if(!store.done[d.id]) store.done[d.id] = []; });
 
+const WARMUP = [
+  {n:'Estiramientos y movilidad articular', s:'5–10 min', warmTag:'Calentamiento', noRest:true,
+   prog:'Movés cada articulación en su rango: cuello, hombros, cadera, rodillas y tobillos. Círculos de brazos, balanceo de piernas, sentadillas suaves. Prepara el cuerpo y reduce el riesgo de lesión.'},
+  {n:'Trote continuo', s:'30 min · ritmo suave', warmTag:'Calentamiento', noRest:true,
+   prog:'Ritmo conversacional (deberías poder hablar mientras trotás). Eleva pulsaciones y temperatura muscular, y suma trabajo cardiovascular para la recomposición.'},
+];
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(store)); }catch(e){} }
-function totalOf(d){ return d.exercises.length + d.core.length; }
+function totalOf(d){ return WARMUP.length + d.exercises.length + d.core.length; }
 function doneSet(id){ return new Set(store.done[id]); }
 function isDone(id,key){ return store.done[id].includes(key); }
 function toggle(id,key){
@@ -465,6 +474,15 @@ function buildDayCard(d, showTodayBadge){
         '<span class="chip" id="count-'+d.id+'">'+set.size+'/'+total+'</span>'+
       '</div>'+
     '</div>';
+
+  const warm = document.createElement('div');
+  warm.className = 'core warm';
+  warm.innerHTML = '<div class="core-head"><span class="dot"></span><span>Calentamiento</span></div>';
+  const warmList = document.createElement('div');
+  warmList.className = 'ex-list';
+  WARMUP.forEach((ex,i)=> warmList.appendChild(buildRow(d, ex, 'warm-'+i)));
+  warm.appendChild(warmList);
+  card.appendChild(warm);
 
   const list = document.createElement('div');
   list.className = 'ex-list';
@@ -641,13 +659,13 @@ function refreshCounts(){
 /* ---------- Detail sheet ---------- */
 const backdrop=document.getElementById('backdrop'), sheet=document.getElementById('sheet'), sheetContent=document.getElementById('sheetContent');
 function openSheet(d, ex){
-  const restLine = ex.s.includes('trabajo') ? d.rest : d.rest;
+  const timed = ex.noRest;
   sheetContent.innerHTML =
-    '<div class="s-tag">'+d.tag+'</div>'+
+    '<div class="s-tag">'+(ex.warmTag||d.tag)+'</div>'+
     '<h2>'+ex.n+'</h2>'+
-    '<div class="detail-block"><div class="dl">Series</div><div class="dv">'+ex.s+'</div></div>'+
-    '<div class="detail-block"><div class="dl">'+iconClock+'Descanso</div><div class="dv mute">'+d.rest+'</div></div>'+
-    (ex.prog ? '<div class="detail-block"><div class="dl">'+iconUp+'Cómo progresar</div><div class="dv mute">'+ex.prog+'</div></div>' : '');
+    '<div class="detail-block"><div class="dl">'+(timed?'Duración':'Series')+'</div><div class="dv">'+ex.s+'</div></div>'+
+    (timed ? '' : '<div class="detail-block"><div class="dl">'+iconClock+'Descanso</div><div class="dv mute">'+d.rest+'</div></div>')+
+    (ex.prog ? '<div class="detail-block"><div class="dl">'+(timed?iconInfo+'Indicaciones':iconUp+'Cómo progresar')+'</div><div class="dv mute">'+ex.prog+'</div></div>' : '');
   backdrop.classList.add('show');
   sheet.classList.add('show');
 }
