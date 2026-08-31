@@ -282,6 +282,19 @@
   .demo-btn:active{ transform:scale(0.97); }
   .demo-btn svg{ width:20px; height:20px; }
 
+  /* ---------- In-sheet timer ---------- */
+  .timer-block{ margin-top:20px; padding-top:18px; border-top:1px solid var(--hairline); }
+  .tm-label{ font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--text-3); margin-bottom:4px; display:flex; align-items:center; gap:7px; }
+  .tm-label svg{ width:15px; height:15px; color:var(--accent-1); }
+  .tm-display{ font-size:54px; font-weight:800; letter-spacing:-0.02em; line-height:1.05; text-align:center; margin:6px 0 16px; font-variant-numeric:tabular-nums; color:var(--text-3); transition:color .2s; }
+  .tm-display.run{ color:var(--accent-1); }
+  .tm-display.done{ color:var(--accent-2); font-size:34px; }
+  .tm-opts{ display:flex; gap:10px; }
+  .tm-opt{ flex:1; padding:15px 10px; border-radius:15px; border:1px solid var(--border); background:rgba(255,255,255,0.06); color:#fff; font-size:16.5px; font-weight:700; cursor:pointer; transition:transform .12s, background .2s; }
+  .tm-opt:active{ transform:scale(0.96); }
+  .tm-opt.active{ background:linear-gradient(135deg,var(--accent-1),var(--accent-2)); border-color:transparent; }
+  .tm-stop{ width:100%; margin-top:10px; padding:13px; border-radius:15px; border:1px solid var(--hairline); background:rgba(255,255,255,0.05); color:var(--text-2); font-size:14.5px; font-weight:600; cursor:pointer; }
+
   /* ---------- Day-complete celebration ---------- */
   #fx{ position:fixed; inset:0; pointer-events:none; z-index:60; }
   #fxtoast{
@@ -753,21 +766,68 @@ function refreshCounts(){
 
 /* ---------- Detail sheet ---------- */
 const backdrop=document.getElementById('backdrop'), sheet=document.getElementById('sheet'), sheetContent=document.getElementById('sheetContent');
+/* ---------- Timer (for time-based exercises) ---------- */
+let tmInterval=null, tmAudioCtx=null;
+function parseSeconds(s){ s=String(s);
+  let m=s.match(/(\d+)\s*[–-]\s*(\d+)\s*s\b/); if(m) return [parseInt(m[1]),parseInt(m[2])];
+  m=s.match(/(\d+)\s*s\b/); if(m) return [parseInt(m[1])];
+  return null;
+}
+function tmStop(){ if(tmInterval){ clearInterval(tmInterval); tmInterval=null; } }
+function tmUnlockAudio(){ try{ if(!tmAudioCtx) tmAudioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(tmAudioCtx.state==='suspended') tmAudioCtx.resume(); }catch(e){} }
+function tmAlarm(){ const ctx=tmAudioCtx; if(!ctx) return; const t0=ctx.currentTime;
+  for(let i=0;i<4;i++){ const o=ctx.createOscillator(), g=ctx.createGain(); o.type='sine'; o.frequency.value=i%2?1046.5:880;
+    const s=t0+i*0.22; g.gain.setValueAtTime(0.0001,s); g.gain.exponentialRampToValueAtTime(0.5,s+0.02); g.gain.exponentialRampToValueAtTime(0.0001,s+0.19);
+    o.connect(g).connect(ctx.destination); o.start(s); o.stop(s+0.21);
+  }
+}
+function startTimer(sec, disp, stop){
+  tmStop(); tmUnlockAudio();
+  disp.textContent=sec; disp.classList.add('run'); disp.classList.remove('done'); stop.style.display='block';
+  const end=Date.now()+sec*1000; let last=sec;
+  tmInterval=setInterval(()=>{
+    const rem=Math.max(0, Math.round((end-Date.now())/1000));
+    if(rem<=0){ tmStop(); disp.textContent='¡Listo!'; disp.classList.remove('run'); disp.classList.add('done'); stop.style.display='none';
+      tmAlarm(); try{ if(navigator.vibrate) navigator.vibrate([0,220,120,220,120,340]); }catch(e){} return; }
+    if(rem!==last){ disp.textContent=rem; last=rem; }
+  },200);
+}
+
 function openSheet(d, ex){
   const timed = ex.noRest;
   const q = encodeURIComponent(ex.n.split('/')[0].split('(')[0].trim()+' ejercicio técnica');
   const demoUrl = 'https://www.youtube.com/results?search_query='+q;
+  const secOpts = parseSeconds(ex.s);
+  const timerHtml = secOpts ?
+    '<div class="timer-block">'+
+      '<div class="tm-label">'+iconClock+'Temporizador</div>'+
+      '<div class="tm-display" id="tmDisplay">'+secOpts[0]+'</div>'+
+      '<div class="tm-opts">'+secOpts.map(v=>'<button class="tm-opt" data-sec="'+v+'">'+v+' s</button>').join('')+'</div>'+
+      '<button class="tm-stop" id="tmStop" style="display:none">Detener</button>'+
+    '</div>' : '';
   sheetContent.innerHTML =
     '<div class="s-tag">'+(ex.warmTag||d.tag)+'</div>'+
     '<h2>'+ex.n+'</h2>'+
     '<a class="demo-btn" href="'+demoUrl+'" target="_blank" rel="noopener">'+iconPlay+'Ver cómo se hace</a>'+
     '<div class="detail-block"><div class="dl">'+(timed?'Duración':'Series')+'</div><div class="dv">'+ex.s+'</div></div>'+
     (timed ? '' : '<div class="detail-block"><div class="dl">'+iconClock+'Descanso</div><div class="dv mute">'+d.rest+'</div></div>')+
-    (ex.prog ? '<div class="detail-block"><div class="dl">'+(timed?iconInfo+'Indicaciones':iconUp+'Cómo progresar')+'</div><div class="dv mute">'+ex.prog+'</div></div>' : '');
+    (ex.prog ? '<div class="detail-block"><div class="dl">'+(timed?iconInfo+'Indicaciones':iconUp+'Cómo progresar')+'</div><div class="dv mute">'+ex.prog+'</div></div>' : '')+
+    timerHtml;
+  if(secOpts){
+    const disp=sheetContent.querySelector('#tmDisplay'), stop=sheetContent.querySelector('#tmStop');
+    sheetContent.querySelectorAll('.tm-opt').forEach(b=>{
+      b.addEventListener('click',()=>{
+        sheetContent.querySelectorAll('.tm-opt').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        startTimer(parseInt(b.dataset.sec), disp, stop);
+      });
+    });
+    stop.addEventListener('click',()=>{ tmStop(); disp.classList.remove('run','done'); disp.textContent=secOpts[0]; stop.style.display='none'; sheetContent.querySelectorAll('.tm-opt').forEach(x=>x.classList.remove('active')); });
+  }
   backdrop.classList.add('show');
   sheet.classList.add('show');
 }
-function closeSheet(){ backdrop.classList.remove('show'); sheet.classList.remove('show'); }
+function closeSheet(){ tmStop(); backdrop.classList.remove('show'); sheet.classList.remove('show'); }
 backdrop.addEventListener('click', closeSheet);
 
 // swipe-down to dismiss
