@@ -87,18 +87,84 @@ Cuando Claude quiera ejecutar un comando o modificar archivos, te llegará un av
 
 ---
 
-## Uso diario (resumen rápido)
+## Qué puedes ver desde el celular
 
-Cada vez que quieras trabajar desde el celular:
+| Tipo de chat | ¿Lo ves en el celular? | ¿Puedes seguirlo? |
+|---|---|---|
+| Chats normales de Claude (claude.ai y la app) | Sí, todos, se sincronizan solos | Sí |
+| La sesión de la computadora con `/remote-control` activo | Sí, en **Code** | Sí, y el trabajo se hace en la computadora |
+| Sesiones viejas de Claude Code (sin `/remote-control`) | No | Solo si las retomas |
 
-1. Enciende la computadora, conéctala al cargador y abre **PowerShell**.
-2. Escribe:
+**Para retomar una sesión vieja desde el celular**, escribe en PowerShell:
+
+```powershell
+claude --resume
+```
+
+Elige la sesión con las flechas, presiona **Enter** y luego escribe `/remote-control`.
+
+---
+
+## Uso diario
+
+### En la mañana, en la computadora (1 minuto)
+
+1. Conecta la laptop al cargador y abre **PowerShell**.
+2. Entra a tu carpeta de trabajo y abre Claude:
    ```powershell
    cd $HOME\Proyectos
-   claude remote-control
+   claude
    ```
-3. Deja la ventana abierta y sal tranquilo.
-4. Desde el celular: app de Claude → **Code** → tu sesión → da órdenes y aprueba permisos.
+3. Cuando aparezca el cuadro con `>`, escribe:
+   ```
+   /remote-control
+   ```
+   Debe decir **"/remote-control is active"** y abajo a la derecha **"/rc active"**.
+4. Minimiza la ventana. **No la cierres.**
+
+> Otra opción: escribir directamente `claude remote-control` en PowerShell hace lo mismo en un solo paso.
+
+### Durante el día, desde el celular
+
+- Abre la app de Claude → **Code** → la sesión de tu computadora (dice **"Remote control"** arriba).
+- Escribe tus órdenes: *"crea…", "revisa…", "organiza mis archivos de…"*.
+- Si Claude necesita permiso, te llega una **notificación**. La abres, lees qué quiere hacer y tocas **Permitir** o **Rechazar**.
+
+### En la noche
+
+Escribe `/exit` en la ventana de Claude en la computadora. O déjala corriendo si quieres seguir después.
+
+---
+
+## Elegir el modelo
+
+En el celular, dentro de la sesión, puedes elegir qué versión de Claude hace el trabajo:
+
+- **Opus 5.5:** el más capaz, para trabajos grandes o complicados.
+- **Sonnet 5.5:** eficiente, sirve para casi todo.
+- **Haiku 4.5:** el más rápido, para cosas sencillas.
+
+**Si un modelo aparece en gris** con el aviso *"Update Claude Code on the computer running this session"*, no es problema de tu plan. El programa de la computadora está desactualizado. Para arreglarlo, en la misma ventana de PowerShell:
+
+1. Escribe `/exit` para salir de Claude. PowerShell sigue abierto.
+2. Escribe `claude update` y espera a que diga **"up to date"**.
+3. Escribe `claude` y luego `/remote-control`.
+4. En el celular, abre la sesión **nueva** de tu computadora.
+
+---
+
+## Configuración pendiente (una sola vez)
+
+1. **Notificaciones en el iPhone:** Ajustes → Notificaciones → Claude → **Permitir notificaciones**. Activa también **Sonidos** y **Pantalla bloqueada**.
+2. **Que la laptop no se duerma:** ver el Paso 5. Suspensión en **Nunca** cuando esté conectada y **"No hacer nada"** al cerrar la tapa.
+3. **Carpeta de trabajo propia**, para que Claude no toque el resto de tus archivos personales:
+   ```powershell
+   mkdir $HOME\Proyectos
+   ```
+4. **Modo de permisos.** Se cambia con **Shift + Tab** en la ventana de Claude de la computadora:
+   - **auto mode:** Claude hace solo lo de bajo riesgo y bloquea lo riesgoso. Te interrumpe menos.
+   - **Modo normal** (sin "auto mode" abajo): te pregunta todo a ti en el celular. Es más seguro, pero te llegan más notificaciones.
+5. **Opcional:** escribe `/config` dentro de Claude y busca una opción de **Remote Control** para activarlo siempre. Si existe en tu versión, ya no tendrás que escribir `/remote-control` cada vez.
 
 ---
 
@@ -124,6 +190,8 @@ En el celular no tienes que cambiar nada. La sesión de la Mac aparecerá en la 
 | No veo mi computadora en el celular | Revisa que la ventana con `claude remote-control` siga abierta y que uses la misma cuenta en los dos. |
 | Se desconectó mientras estaba fuera | La computadora se suspendió o perdió internet. Revisa el Paso 5 y vuelve a ejecutar `claude remote-control`. |
 | No me llegan notificaciones | Revisa el Paso 7 y que el modo "No molestar" del celular esté apagado. |
+| Opus u otro modelo aparece en gris | Actualiza Claude Code en la computadora (ver "Elegir el modelo"). |
+| Escribí `cloud` y no funciona | Se escribe `claude` (c-l-a-u-d-e). |
 
 ## Consejo de seguridad
 
