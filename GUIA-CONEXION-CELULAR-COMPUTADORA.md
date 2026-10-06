@@ -141,17 +141,22 @@ Escribe `/exit` en la ventana de Claude en la computadora. O déjala corriendo s
 Para no escribir `/remote-control` todos los días, pega esto **una sola vez** en PowerShell y presiona **Enter**:
 
 ```powershell
+mkdir $HOME\Claude -Force
 $startup = [Environment]::GetFolderPath('Startup')
 @'
 @echo off
 title Claude Remote Control - NO CERRAR
-cd /d "%USERPROFILE%"
+cd /d "%USERPROFILE%\Claude"
 claude remote-control
 '@ | Set-Content -Path "$startup\Claude-Remote-Control.bat" -Encoding ASCII
 powercfg /change standby-timeout-ac 0
 powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0
 powercfg /setactive SCHEME_CURRENT
 ```
+
+La **primera vez** que se abra la ventana preguntará `Trust C:\Users\carlo\Claude? [y/N]`: escribe `y` y presiona **Enter**. Queda guardado y no vuelve a preguntar.
+
+> Se usa la carpeta `Claude` y no la carpeta personal (`C:\Users\carlo`) porque en la carpeta personal Claude pregunta si confías **cada vez** y no lo guarda, así que la automatización se quedaría detenida esperando tu respuesta.
 
 Esto hace tres cosas:
 1. Cada vez que enciendes la computadora e inicias sesión, se abre sola una ventana **"Claude Remote Control - NO CERRAR"** que activa la conexión.
