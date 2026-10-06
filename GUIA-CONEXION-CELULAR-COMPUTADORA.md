@@ -136,6 +136,53 @@ Escribe `/exit` en la ventana de Claude en la computadora. O déjala corriendo s
 
 ---
 
+## Automatizar: que se conecte solo al encender la computadora
+
+Para no escribir `/remote-control` todos los días, pega esto **una sola vez** en PowerShell y presiona **Enter**:
+
+```powershell
+$startup = [Environment]::GetFolderPath('Startup')
+@'
+@echo off
+title Claude Remote Control - NO CERRAR
+cd /d "%USERPROFILE%"
+claude remote-control
+'@ | Set-Content -Path "$startup\Claude-Remote-Control.bat" -Encoding ASCII
+powercfg /change standby-timeout-ac 0
+powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0
+powercfg /setactive SCHEME_CURRENT
+```
+
+Esto hace tres cosas:
+1. Cada vez que enciendes la computadora e inicias sesión, se abre sola una ventana **"Claude Remote Control - NO CERRAR"** que activa la conexión.
+2. La computadora no se suspende mientras esté conectada al cargador.
+3. Al cerrar la tapa con el cargador conectado, la computadora sigue funcionando.
+
+Desde el celular solo abres **Code** y ahí está tu computadora. Si cierras esa ventana por error, reinicia la computadora o escribe `claude remote-control` en PowerShell.
+
+**Para quitarlo:** presiona `Windows + R`, escribe `shell:startup`, presiona **Enter** y borra el archivo `Claude-Remote-Control.bat`.
+
+(También están los scripts en la carpeta `windows/` de este repositorio.)
+
+---
+
+## Ver en el celular un chat que hiciste en la computadora
+
+Un chat de Claude Code de la computadora solo aparece en el celular mientras esté abierto con Remote Control. Los chats se guardan **según la carpeta donde los empezaste**:
+
+1. En PowerShell, entra a la carpeta donde trabajaste ese chat. Por ejemplo:
+   ```powershell
+   cd "$HOME\Videos\Curso"
+   ```
+2. Escribe:
+   ```powershell
+   claude --resume
+   ```
+3. Elige el chat con las flechas y presiona **Enter**.
+4. Escribe `/remote-control`. El chat aparecerá en tu celular, en **Code**.
+
+---
+
 ## Elegir el modelo
 
 En el celular, dentro de la sesión, puedes elegir qué versión de Claude hace el trabajo:
