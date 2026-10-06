@@ -188,6 +188,27 @@ Un chat de Claude Code de la computadora solo aparece en el celular mientras est
 
 ---
 
+## Trabajar con el disco duro externo
+
+Los clips de video viven en el disco externo, así que **no los muevas** a la carpeta `Claude`. Solo dale permiso a Claude para entrar al disco.
+
+1. Conecta el disco y abre **Este equipo** para ver qué letra tiene (por ejemplo `E:`).
+2. En PowerShell pega esto, cambiando `E:` por tu letra, y presiona **Enter**:
+   ```powershell
+   mkdir $HOME\Claude\.claude -Force
+   '{ "permissions": { "additionalDirectories": ["E:\\"] } }' | Set-Content $HOME\Claude\.claude\settings.json -Encoding UTF8
+   ```
+3. Reinicia la ventana **"Claude Remote Control - NO CERRAR"** (ciérrala y vuelve a abrirla, o reinicia la computadora).
+
+Desde el celular ya puedes pedir cosas como *"revisa los clips de E:\Curso\Clase 3"*.
+
+**Para que no falle:**
+- **Fija la letra del disco**, porque Windows a veces le cambia la letra: clic derecho en Inicio → **Administración de discos** → clic derecho en el disco externo → **Cambiar la letra y rutas de acceso** → elige una letra fija, por ejemplo `V:` (de videos). Luego usa esa letra en el paso 2.
+- **El disco tiene que estar conectado** para que Claude vea los archivos. Si está desconectado, Claude te dirá que no encuentra la ruta.
+- La carpeta de trabajo sigue siendo `C:\Users\carlo\Claude`. Así la conexión automática funciona aunque el disco no esté conectado al encender.
+
+---
+
 ## Elegir el modelo
 
 En el celular, dentro de la sesión, puedes elegir qué versión de Claude hace el trabajo:
