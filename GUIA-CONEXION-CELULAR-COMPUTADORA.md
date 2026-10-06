@@ -196,7 +196,7 @@ Los clips de video viven en el disco externo, así que **no los muevas** a la ca
 2. En PowerShell pega esto, cambiando `E:` por tu letra, y presiona **Enter**:
    ```powershell
    mkdir $HOME\Claude\.claude -Force
-   '{ "permissions": { "additionalDirectories": ["E:\\"] } }' | Set-Content $HOME\Claude\.claude\settings.json -Encoding UTF8
+   '{ "permissions": { "additionalDirectories": ["E:\\"] } }' | Set-Content $HOME\Claude\.claude\settings.json -Encoding ASCII
    ```
 3. Reinicia la ventana **"Claude Remote Control - NO CERRAR"** (ciérrala y vuelve a abrirla, o reinicia la computadora).
 
